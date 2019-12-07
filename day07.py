@@ -1,4 +1,4 @@
-from IntcodeSim import IntcodeSim
+from util.intcode import IntcodeSim
 import itertools
 
 def_mem = [int(arg) for arg in open('input.txt').read().split(',')]
