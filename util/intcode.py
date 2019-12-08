@@ -1,17 +1,43 @@
-class IntcodeSim():
-    def __init__(self, instruction_list, phase):
-        self.memory = instruction_list
-        self.ip = 0
-        self.no_args = {1: 2, 2: 2, 3: 0, 4: 1, 5: 2, 6: 2, 7: 2, 8: 2, 99: 0}
-        self.no_locs = {1: 1, 2: 1, 3: 1, 4: 0, 5: 0, 6: 0, 7: 1, 8: 1, 99: 0}
+class IntcodeMachine():
+    class EmptyInput(Exception):
+        def __init__(self):
+                super().__init__("Machine input is empty. Can't continue.")
 
-        self.input = [phase]
+    def __init__(self, init_mem, init_input=None):
+        self.memory = init_mem
+        self.ip = 0
+        self.no_args = {
+            1: 2,
+            2: 2, 
+            3: 0, 
+            4: 1, 
+            5: 2, 
+            6: 2, 
+            7: 2, 
+            8: 2, 
+            99: 0
+        }
+        self.writes = {
+            1: True, 
+            2: True, 
+            3: True, 
+            4: False, 
+            5: False, 
+            6: False, 
+            7: True, 
+            8: True, 
+            99: False
+        }
+
+        self.input = [init_input]
         self.output = []
 
-        self.reach_exit = False
-        self.err_no_input = False
+        self.input_history = []
+        self.output_history = []
 
-    def process(self):
+        self.reached_exit = False
+
+    def step(self):
         instr = self.memory[self.ip]
         opcode = instr % 100
 
@@ -27,8 +53,7 @@ class IntcodeSim():
         for i in range(self.no_args[opcode]):
             args.append(self.memory[self.ip] if mode[i] == 1 else self.memory[self.memory[self.ip]])
             self.ip += 1
-
-        if self.no_locs[opcode]:
+        if self.writes[opcode]:
             loc = self.memory[self.ip] if mode[-1] == 0 else None
             self.ip += 1
 
@@ -43,11 +68,12 @@ class IntcodeSim():
                 self.memory[loc] = self.input[0]
                 self.input = self.input[1:]
             else:
-                self.err_no_input = True
                 self.ip -= 2
+                raise self.EmptyInput
         
         elif opcode == 4:
             self.output.append(args[0])
+            self.output_history.append(args[0])
 
         elif opcode == 5:
             if args[0] != 0:
@@ -64,17 +90,18 @@ class IntcodeSim():
             self.memory[loc] = 1 if args[0] == args[1] else 0
         
         elif opcode == 99:
-            self.reach_exit = True
+            self.reached_exit = True
 
     def run(self):
-        while not self.err_no_input and not self.reach_exit:
-            self.process()
+        while not self.reached_exit:
+            try:
+                self.step()
+            except self.EmptyInput:
+                return
 
     def clear_output(self):
         self.output = []
 
-    def provide_input(self, new_input):
-        if len(new_input):
-            self.err_no_input = False
-
+    def add_input(self, new_input):
         self.input += new_input
+        self.input_history += new_input
