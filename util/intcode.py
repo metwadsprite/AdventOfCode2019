@@ -8,24 +8,26 @@ class IntcodeMachine():
         self.ip = 0
         self.no_args = {
             1: 2,
-            2: 2, 
-            3: 0, 
-            4: 1, 
-            5: 2, 
-            6: 2, 
-            7: 2, 
-            8: 2, 
+            2: 2,
+            3: 0,
+            4: 1,
+            5: 2,
+            6: 2,
+            7: 2,
+            8: 2,
+            9: 1,
             99: 0
         }
         self.writes = {
-            1: True, 
-            2: True, 
-            3: True, 
-            4: False, 
-            5: False, 
-            6: False, 
-            7: True, 
-            8: True, 
+            1: True,
+            2: True,
+            3: True,
+            4: False,
+            5: False,
+            6: False,
+            7: True,
+            8: True,
+            9: False,
             99: False
         }
 
@@ -36,6 +38,10 @@ class IntcodeMachine():
         self.output_history = []
 
         self.reached_exit = False
+
+        self.relative_base = 0
+
+        self.memory = {i: self.memory[i] for i in range(len(self.memory))}
 
     def step(self):
         instr = self.memory[self.ip]
@@ -49,12 +55,32 @@ class IntcodeMachine():
         self.ip += 1
 
         args = []
+        mode_it = 0
 
         for i in range(self.no_args[opcode]):
-            args.append(self.memory[self.ip] if mode[i] == 1 else self.memory[self.memory[self.ip]])
+            if self.ip not in self.memory:
+                self.memory[self.ip] = 0
+            if self.memory[self.ip] not in self.memory:
+                self.memory[self.memory[self.ip]] = 0
+            if self.relative_base + self.memory[self.ip] not in self.memory:
+                self.memory[self.relative_base + self.memory[self.ip]] = 0
+
+            if mode[mode_it] == 0:
+                args.append(self.memory[self.memory[self.ip]])
+            elif mode[mode_it] == 1:
+                args.append(self.memory[self.ip])
+            elif mode[mode_it] == 2:
+                args.append(self.memory[self.relative_base + self.memory[self.ip]])
+            
             self.ip += 1
+            mode_it += 1
+
         if self.writes[opcode]:
-            loc = self.memory[self.ip] if mode[-1] == 0 else None
+            if mode[mode_it] == 0:
+                loc = self.memory[self.ip]
+            elif mode[mode_it] == 2:
+                loc = self.relative_base + self.memory[self.ip]
+
             self.ip += 1
 
         if opcode == 1:
@@ -66,7 +92,7 @@ class IntcodeMachine():
         elif opcode == 3:
             if len(self.input):
                 self.memory[loc] = self.input[0]
-                self.input = self.input[1:]
+                del self.input[0]
             else:
                 self.ip -= 2
                 raise self.EmptyInput
@@ -88,6 +114,9 @@ class IntcodeMachine():
 
         elif opcode == 8:
             self.memory[loc] = 1 if args[0] == args[1] else 0
+
+        elif opcode == 9:
+            self.relative_base += args[0]
         
         elif opcode == 99:
             self.reached_exit = True
