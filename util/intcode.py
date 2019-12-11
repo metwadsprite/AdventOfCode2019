@@ -3,7 +3,7 @@ class IntcodeMachine():
         def __init__(self):
                 super().__init__("Machine input is empty. Can't continue.")
 
-    def __init__(self, init_mem, init_input=None):
+    def __init__(self, init_mem, init_input=[]):
         self.memory = init_mem
         self.ip = 0
         self.no_args = {
@@ -31,11 +31,8 @@ class IntcodeMachine():
             99: False
         }
 
-        self.input = [init_input]
+        self.input = init_input
         self.output = []
-
-        self.input_history = []
-        self.output_history = []
 
         self.reached_exit = False
 
@@ -99,7 +96,6 @@ class IntcodeMachine():
         
         elif opcode == 4:
             self.output.append(args[0])
-            self.output_history.append(args[0])
 
         elif opcode == 5:
             if args[0] != 0:
@@ -133,4 +129,3 @@ class IntcodeMachine():
 
     def add_input(self, new_input):
         self.input += new_input
-        self.input_history += new_input
