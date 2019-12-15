@@ -127,5 +127,5 @@ class IntcodeMachine():
     def clear_output(self):
         self.output = []
 
-    def add_input(self, new_input):
+    def add_input(self, new_input=[]):
         self.input += new_input
