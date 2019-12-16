@@ -7,6 +7,7 @@ def visualize():
     for i in range(-21, 20):
         for j in range(-21, 20):
             if complex(j, i) in walls: print('██', end='')
+            elif complex(j, i) == end: print('XX', end='')
             elif complex(j, i) == pos: print('##', end='')
             elif complex(j, i) in visited: print('..', end='')
             else: print('  ', end='')
